@@ -14,15 +14,15 @@ Agent lain membutuhkan akses data yang konsisten tanpa memiliki logika database 
 
 - Mengubah natural language menjadi query MongoDB.
 - Mengeksekusi query read-only.
-- Mengembalikan hasil dalam format JSON.
-- Mengikuti API Contract kelas.
+- Memformat hasil query menjadi teks kalimat yang terstruktur dan mudah dibaca (LLM-ready).
+- Mengembalikan hasil berformat JSON flat sesuai API Contract generalis (1 input teks, 1 output teks).
 
 ## 4. Tech Stack
 
 - Go (Golang)
+- GoFiber (Web Framework)
 - MongoDB
 - MongoDB Go Driver
-- REST Client (untuk Shared Context API)
 
 ## 5. Scope
 
@@ -46,23 +46,22 @@ Agent lain membutuhkan akses data yang konsisten tanpa memiliki logika database 
 
 ## 6. Workflow
 
-1. Router membuat task.
-2. Database Querier membaca task dari Shared Context.
-3. Agent menerjemahkan user_request menjadi query MongoDB.
+1. Orchestrator/Router mengirimkan HTTP POST request ke endpoint `/query` dengan payload task.
+2. HTTP Handler (GoFiber) meneruskan task ke komponen Agent.
+3. Agent menerjemahkan `user_request` menjadi query MongoDB.
 4. Query dieksekusi.
-5. Hasil dikembalikan sebagai `database_querier_result`.
-6. Agent memperbarui `task_progress`.
+5. Raw output MongoDB diformat menjadi teks yang mudah dibaca.
+6. Hasil dikembalikan sebagai response HTTP JSON (field `result`).
 
 ## 7. Functional Requirements
 
-- FR-01 Membaca task berdasarkan task ID.
-- FR-02 Membaca `user_request`.
+- FR-01 Menerima task melalui HTTP POST request (`/query`).
+- FR-02 Mengekstrak `user_request` dari payload.
 - FR-03 Menghasilkan query MongoDB.
-- FR-04 Memvalidasi query.
-- FR-05 Mengeksekusi query read-only.
-- FR-06 Mengembalikan hasil JSON.
-- FR-07 Menyimpan hasil pada `database_querier_result`.
-- FR-08 Memperbarui `task_progress`.
+- FR-04 Memvalidasi query agar read-only.
+- FR-05 Mengeksekusi query.
+- FR-06 Memformat data MongoDB menjadi teks terstruktur.
+- FR-07 Mengembalikan JSON response flat dengan field `result`.
 
 ## 8. Non-Functional Requirements
 
@@ -73,26 +72,31 @@ Agent lain membutuhkan akses data yang konsisten tanpa memiliki logika database 
 
 ## 9. Acceptance Criteria
 
-- Agent dapat membaca task.
-- Query MongoDB berhasil dibuat.
+- Agent berhasil menerima request HTTP POST.
+- Query MongoDB berhasil dibuat dan divalidasi (hanya read-only).
 - Query berhasil dieksekusi.
-- Hasil tersimpan pada Shared Context.
-- Tidak ada operasi write.
+- Hasil berformat teks dikembalikan dengan benar dalam response JSON.
+- Tidak ada operasi write yang diizinkan (keamanan terjamin).
 
 ## 10. Project Structure
 
 ```text
-database-querier-agent/
+database-querier/
 ├── cmd/
 ├── internal/
 │   ├── agent/
-│   ├── parser/
-│   ├── mongodb/
+│   ├── config/
+│   ├── logger/
 │   ├── memory/
-│   ├── service/
-│   └── config/
-├── docs/
-└── go.mod
+│   ├── mongodb/
+│   ├── parser/
+│   └── service/
+├── seed/
+├── .env
+├── PRD_Database_Querier_Agent.md
+├── README.md
+├── go.mod
+└── go.sum
 ```
 
 ## 11. Future Enhancements
