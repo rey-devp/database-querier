@@ -14,14 +14,19 @@ type Config struct {
 }
 
 func LoadConfig() *Config {
+	// Try loading from root if running from cmd
 	err := godotenv.Load()
+	if err != nil {
+		err = godotenv.Load("../.env")
+	}
+
 	if err != nil {
 		log.Println("No .env file found, falling back to system env vars")
 	}
 
-	mongoURI := os.Getenv("MONGO_URI")
+	mongoURI := os.Getenv("MONGO_DBQ")
 	if mongoURI == "" {
-		log.Fatal("MONGO_URI must be set")
+		log.Fatal("MONGO_DBQ must be set")
 	}
 
 	databaseName := os.Getenv("DATABASE_NAME")

@@ -27,11 +27,19 @@ func main() {
 	coll.DeleteMany(ctx, bson.M{})
 
 	docs := []interface{}{
+		// Mahasiswa Semester 6 (seperti di contoh payload)
 		bson.M{"name": "Ahmad", "semester": 6, "gpa": 3.8, "major": "Informatika"},
 		bson.M{"name": "Budi", "semester": 6, "gpa": 3.2, "major": "Sistem Informasi"},
-		bson.M{"name": "Citra", "semester": 4, "gpa": 3.9, "major": "Informatika"},
 		bson.M{"name": "Diana", "semester": 6, "gpa": 3.5, "major": "Teknik Komputer"},
+		
+		// Mahasiswa Semester Lainnya
+		bson.M{"name": "Citra", "semester": 4, "gpa": 3.9, "major": "Informatika"},
 		bson.M{"name": "Eko", "semester": 2, "gpa": 3.1, "major": "Informatika"},
+		bson.M{"name": "Fahmi", "semester": 4, "gpa": 2.8, "major": "Teknik Komputer"},
+		bson.M{"name": "Gita", "semester": 2, "gpa": 3.4, "major": "Sistem Informasi"},
+		bson.M{"name": "Hadi", "semester": 8, "gpa": 3.7, "major": "Informatika"},
+		bson.M{"name": "Indah", "semester": 8, "gpa": 3.9, "major": "Sistem Informasi"},
+		bson.M{"name": "Joko", "semester": 4, "gpa": 2.9, "major": "Teknik Komputer"},
 	}
 
 	res, err := coll.InsertMany(ctx, docs)

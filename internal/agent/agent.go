@@ -2,8 +2,12 @@ package agent
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
+
+	"go.mongodb.org/mongo-driver/v2/bson"
 
 	"database-querier-agent/internal/logger"
 	"database-querier-agent/internal/memory"
@@ -105,16 +109,7 @@ func (a *Agent) ProcessTask(ctx context.Context, taskID string) (*memory.AgentRe
 	// 6. Build response
 	res := &memory.AgentResponse{
 		AgentName: "database_querier",
-		MemoryPayload: memory.MemoryPayload{
-			Result: memory.QueryResult{
-				Collection: plan.Collection,
-				Operation:  plan.Operation,
-				Filter:     plan.Filter,
-				Projection: plan.Projection,
-				Documents:  documents,
-				Total:      total,
-			},
-		},
+		Result:    formatResult(plan.Operation, documents, total),
 	}
 
 	// 7. Save result
@@ -129,12 +124,65 @@ func (a *Agent) ProcessTask(ctx context.Context, taskID string) (*memory.AgentRe
 func (a *Agent) handleError(taskID, message string) error {
 	errRes := &memory.ErrorResponse{
 		AgentName: "database_querier",
-		Status:    "failed",
-		Message:   message,
+		Result:    fmt.Sprintf("Gagal memproses permintaan: %s", message),
 	}
 	a.store.SaveResult(taskID, errRes)
 	
 	logger.Error("RESPONSE", "Task failed", "task_id", taskID, "message", message)
 	
 	return fmt.Errorf("%s", message)
+}
+
+func formatResult(operation string, documents interface{}, total int) string {
+	if operation == "countDocuments" {
+		return fmt.Sprintf("Total data yang ditemukan: %d", total)
+	}
+
+	if total == 0 {
+		return "Tidak ditemukan data yang sesuai."
+	}
+
+	var sb strings.Builder
+	if operation == "aggregate" {
+		sb.WriteString("Hasil agregasi:\n")
+	} else {
+		sb.WriteString(fmt.Sprintf("Ditemukan %d data:\n", total))
+	}
+
+	docs, ok := documents.([]bson.M)
+	if ok {
+		for i, doc := range docs {
+			var fields []string
+			// Convert bson.M to something more readable if possible, or just JSON
+			b, err := json.Marshal(doc)
+			if err == nil {
+				fields = append(fields, string(b))
+			} else {
+				for k, v := range doc {
+					fields = append(fields, fmt.Sprintf("%s: %v", k, v))
+				}
+			}
+			
+			// If JSON was successful, it's just one element in `fields`
+			if len(fields) == 1 && strings.HasPrefix(fields[0], "{") {
+				sb.WriteString(fmt.Sprintf("- %s", fields[0]))
+			} else {
+				sb.WriteString(fmt.Sprintf("- %s", strings.Join(fields, ", ")))
+			}
+			
+			if i < len(docs)-1 {
+				sb.WriteString("\n")
+			}
+		}
+	} else {
+		// Fallback to JSON
+		b, err := json.MarshalIndent(documents, "", "  ")
+		if err == nil {
+			sb.Write(b)
+		} else {
+			sb.WriteString(fmt.Sprintf("%v", documents))
+		}
+	}
+
+	return sb.String()
 }
