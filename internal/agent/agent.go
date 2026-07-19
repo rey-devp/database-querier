@@ -29,7 +29,7 @@ func NewAgent(mongo *mongodb.Client, store *memory.Store) *Agent {
 	}
 }
 
-func (a *Agent) ProcessTask(ctx context.Context, taskID string) (*memory.AgentResponse, error) {
+func (a *Agent) ProcessTask(ctx context.Context, taskID string) (*memory.SuccessResponse, error) {
 	startTime := time.Now()
 	
 	// 1. Get task
@@ -107,9 +107,14 @@ func (a *Agent) ProcessTask(ctx context.Context, taskID string) (*memory.AgentRe
 	logger.Info("MONGODB", "Query executed", "collection", plan.Collection, "total", total, "duration", dbDuration.String())
 
 	// 6. Build response
-	res := &memory.AgentResponse{
-		AgentName: "database_querier",
-		Result:    formatResult(plan.Operation, documents, total),
+	res := &memory.SuccessResponse{
+		Status: "success",
+		TaskID: taskID,
+		Data: memory.ResponseData{
+			Result:  formatResult(plan.Operation, documents, total),
+			FileURL: nil,
+		},
+		Message: "Pemrosesan berhasil",
 	}
 
 	// 7. Save result
@@ -123,8 +128,10 @@ func (a *Agent) ProcessTask(ctx context.Context, taskID string) (*memory.AgentRe
 
 func (a *Agent) handleError(taskID, message string) error {
 	errRes := &memory.ErrorResponse{
-		AgentName: "database_querier",
-		Result:    fmt.Sprintf("Gagal memproses permintaan: %s", message),
+		Status:  "error",
+		TaskID:  taskID,
+		Data:    nil,
+		Message: fmt.Sprintf("Gagal memproses permintaan: %s", message),
 	}
 	a.store.SaveResult(taskID, errRes)
 	

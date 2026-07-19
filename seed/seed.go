@@ -27,10 +27,13 @@ func main() {
 	coll.DeleteMany(ctx, bson.M{})
 
 	docs := []interface{}{
-		// Mahasiswa Semester 6 (seperti di contoh payload)
+		// Mahasiswa Semester 6
 		bson.M{"name": "Ahmad", "semester": 6, "gpa": 3.8, "major": "Informatika"},
 		bson.M{"name": "Budi", "semester": 6, "gpa": 3.2, "major": "Sistem Informasi"},
 		bson.M{"name": "Diana", "semester": 6, "gpa": 3.5, "major": "Teknik Komputer"},
+		bson.M{"name": "Reza", "semester": 6, "gpa": 3.9, "major": "Informatika"},
+		bson.M{"name": "Siti", "semester": 6, "gpa": 3.4, "major": "Teknik Komputer"},
+		bson.M{"name": "Tono", "semester": 6, "gpa": 3.1, "major": "Sistem Informasi"},
 		
 		// Mahasiswa Semester Lainnya
 		bson.M{"name": "Citra", "semester": 4, "gpa": 3.9, "major": "Informatika"},
@@ -40,6 +43,13 @@ func main() {
 		bson.M{"name": "Hadi", "semester": 8, "gpa": 3.7, "major": "Informatika"},
 		bson.M{"name": "Indah", "semester": 8, "gpa": 3.9, "major": "Sistem Informasi"},
 		bson.M{"name": "Joko", "semester": 4, "gpa": 2.9, "major": "Teknik Komputer"},
+		bson.M{"name": "Kiki", "semester": 2, "gpa": 3.6, "major": "Informatika"},
+		bson.M{"name": "Lina", "semester": 8, "gpa": 3.3, "major": "Sistem Informasi"},
+		bson.M{"name": "Mira", "semester": 4, "gpa": 3.5, "major": "Informatika"},
+		bson.M{"name": "Nina", "semester": 2, "gpa": 3.8, "major": "Teknik Komputer"},
+		bson.M{"name": "Oki", "semester": 8, "gpa": 3.0, "major": "Informatika"},
+		bson.M{"name": "Putri", "semester": 4, "gpa": 3.2, "major": "Sistem Informasi"},
+		bson.M{"name": "Qori", "semester": 2, "gpa": 3.7, "major": "Teknik Komputer"},
 	}
 
 	res, err := coll.InsertMany(ctx, docs)

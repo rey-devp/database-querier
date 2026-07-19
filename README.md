@@ -31,40 +31,56 @@ Agent ini bertugas membaca perintah natural (bahasa Indonesia) dari pengguna, me
 
 ## API Contract
 
-Agent ini menggunakan pola **1 input teks, 1 output teks** agar generalis dan mudah diintegrasikan dengan Orchestrator mana pun.
+Agent ini menggunakan pola **1 input teks, 1 output teks** dan 100% *compliant* dengan standar integrasi Orchestrator Joki Tugas System dari Banana Dev Team.
 
 ### Endpoint
 `POST /query`
 
 ### Input Request (JSON)
-
+Format standar dari API Gateway Orchestrator:
 ```json
 {
-  "_id": "task-001",
-  "user_request": "Tampilkan seluruh mahasiswa semester 6"
+  "task_id": "req-12345-abc",
+  "agent_type": "database_querier",
+  "payload": {
+    "url": "",
+    "keyword": "",
+    "raw_text": "Tampilkan seluruh mahasiswa semester 6"
+  },
+  "metadata": {
+    "sender": "orchestrator",
+    "timestamp": 1689694097
+  }
+}
+```
+*(Catatan: Agent mengambil query utama dari field `payload.raw_text`)*
+
+### Output Response Sukses (HTTP 200)
+Sesuai panduan agen mandiri, agent mengembalikan teks hasil query melalui `data.result` dan menyertakan `data.file_url: null`.
+```json
+{
+  "status": "success",
+  "task_id": "req-12345-abc",
+  "data": {
+    "result": "Ditemukan 6 data:\n- name: Ahmad, semester: 6, gpa: 3.8, major: Informatika\n- name: Budi, semester: 6, gpa: 3.2, major: Sistem Informasi\n- ...",
+    "file_url": null
+  },
+  "message": "Pemrosesan berhasil"
 }
 ```
 
-### Output Response Sukses (JSON)
-
-Hasil `result` berupa teks datar (string) yang sudah dirapikan agar siap diprompt ke LLM.
-
+### Output Response Error (HTTP 400/500)
 ```json
 {
-  "agent_name": "database_querier",
-  "result": "Ditemukan 3 data:\n- name: Ahmad, semester: 6, gpa: 3.8\n- name: Budi, semester: 6, gpa: 3.2\n- name: Diana, semester: 6, gpa: 3.5"
-}
-```
-
-### Output Response Error (JSON)
-
-```json
-{
-  "agent_name": "database_querier",
-  "result": "Gagal memproses permintaan: Collection not found"
+  "status": "error",
+  "task_id": "req-12345-abc",
+  "data": null,
+  "message": "Gagal memproses permintaan: Collection not found"
 }
 ```
 
 ## Rules & Security
-- Field `agent_name` pada output selalu bernilai `"database_querier"`.
+- Mendukung fitur **Smart Skip (Type-Safe Circuit Breaker)**.
+- **CORS** telah diaktifkan dengan whitelist origin `https://jokitugas.bananaunion.web.id`.
+- Field `agent_type` pada input tidak digunakan untuk validasi strict (lebih fokus ke eksekusi `raw_text`).
 - Agent ini hanya mengizinkan operasi read-only. Segala bentuk modifikasi atau keyword pipeline yang berbahaya (seperti `$out`, `$merge`) akan ditolak secara otomatis oleh Validator.

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	fiberLogger "github.com/gofiber/fiber/v2/middleware/logger"
 
 	"database-querier-agent/internal/agent"
@@ -50,6 +51,13 @@ func main() {
 	app := fiber.New(fiber.Config{
 		AppName: "Database Querier Agent",
 	})
+
+	// Add CORS middleware
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: "https://jokitugas.bananaunion.web.id",
+		AllowMethods: "POST,GET,OPTIONS",
+		AllowHeaders: "Content-Type,Authorization",
+	}))
 
 	// Add Fiber Logger middleware
 	app.Use(fiberLogger.New(fiberLogger.Config{

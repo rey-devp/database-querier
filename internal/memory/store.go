@@ -8,7 +8,7 @@ import (
 type Store struct {
 	mu      sync.RWMutex
 	tasks   map[string]*Task
-	results map[string]interface{} // Can store AgentResponse or ErrorResponse
+	results map[string]interface{} // Can store SuccessResponse or ErrorResponse
 }
 
 func NewStore() *Store {

@@ -46,22 +46,22 @@ Agent lain membutuhkan akses data yang konsisten tanpa memiliki logika database 
 
 ## 6. Workflow
 
-1. Orchestrator/Router mengirimkan HTTP POST request ke endpoint `/query` dengan payload task.
+1. Orchestrator/Router mengirimkan HTTP POST request ke endpoint `/query` dengan payload task (termasuk `task_id` dan `payload.raw_text`).
 2. HTTP Handler (GoFiber) meneruskan task ke komponen Agent.
-3. Agent menerjemahkan `user_request` menjadi query MongoDB.
+3. Agent menerjemahkan `payload.raw_text` menjadi query MongoDB.
 4. Query dieksekusi.
 5. Raw output MongoDB diformat menjadi teks yang mudah dibaca.
-6. Hasil dikembalikan sebagai response HTTP JSON (field `result`).
+6. Hasil dikembalikan sebagai response HTTP JSON terstandarisasi (mengandung `status`, `task_id`, `data.result`, `data.file_url`, dan `message`).
 
 ## 7. Functional Requirements
 
 - FR-01 Menerima task melalui HTTP POST request (`/query`).
-- FR-02 Mengekstrak `user_request` dari payload.
+- FR-02 Mengekstrak `payload.raw_text` dan `task_id` dari payload JSON.
 - FR-03 Menghasilkan query MongoDB.
 - FR-04 Memvalidasi query agar read-only.
 - FR-05 Mengeksekusi query.
 - FR-06 Memformat data MongoDB menjadi teks terstruktur.
-- FR-07 Mengembalikan JSON response flat dengan field `result`.
+- FR-07 Mengembalikan JSON response yang selaras dengan panduan Joki Tugas System (CORS aktif, `status`, `data.result`, `file_url: null`).
 
 ## 8. Non-Functional Requirements
 
@@ -72,10 +72,10 @@ Agent lain membutuhkan akses data yang konsisten tanpa memiliki logika database 
 
 ## 9. Acceptance Criteria
 
-- Agent berhasil menerima request HTTP POST.
+- Agent berhasil menerima request HTTP POST (dilengkapi dukungan CORS middleware).
 - Query MongoDB berhasil dibuat dan divalidasi (hanya read-only).
 - Query berhasil dieksekusi.
-- Hasil berformat teks dikembalikan dengan benar dalam response JSON.
+- Hasil berformat teks dikembalikan dengan benar dalam field `data.result` pada response JSON.
 - Tidak ada operasi write yang diizinkan (keamanan terjamin).
 
 ## 10. Project Structure

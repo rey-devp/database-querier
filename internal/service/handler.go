@@ -25,16 +25,26 @@ func NewHandler(a *agent.Agent, s *memory.Store) *Handler {
 func (h *Handler) HandleQuery(c *fiber.Ctx) error {
 	logger.Info("REQUEST", "Received POST /query", "ip", c.IP())
 
-	var task memory.Task
-	if err := c.BodyParser(&task); err != nil {
+	// 1. Parse request sesuai format Orchestrator
+	var req memory.OrchestratorRequest
+	if err := c.BodyParser(&req); err != nil {
 		logger.Warn("REQUEST", "Invalid request body", "error", err.Error())
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid request body",
+		return c.Status(fiber.StatusBadRequest).JSON(memory.ErrorResponse{
+			Status:  "error",
+			TaskID:  "",
+			Data:    nil,
+			Message: "Invalid request body",
 		})
 	}
 
+	// 2. Map ke internal task
+	task := &memory.Task{
+		ID:          req.TaskID,
+		UserRequest: req.Payload.RawText,
+	}
+
 	// Save task to mock store
-	h.store.SaveTask(&task)
+	h.store.SaveTask(task)
 
 	// Process task
 	res, err := h.agent.ProcessTask(context.Background(), task.ID)
