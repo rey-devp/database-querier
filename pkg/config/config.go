@@ -14,24 +14,22 @@ type Config struct {
 }
 
 func LoadConfig() *Config {
-	// Try loading from root if running from cmd
+	// Try loading from .env file (will not exist in Vercel, that's OK)
 	err := godotenv.Load()
 	if err != nil {
-		err = godotenv.Load("../.env")
-	}
-
-	if err != nil {
-		log.Println("No .env file found, falling back to system env vars")
+		_ = godotenv.Load("../.env")
 	}
 
 	mongoURI := os.Getenv("MONGO_DBQ")
 	if mongoURI == "" {
-		log.Fatal("MONGO_DBQ must be set")
+		log.Println("[CONFIG] MONGO_DBQ is empty! Available env vars check...")
+		panic("MONGO_DBQ environment variable must be set")
 	}
 
 	databaseName := os.Getenv("DATABASE_NAME")
 	if databaseName == "" {
-		log.Fatal("DATABASE_NAME must be set")
+		log.Println("[CONFIG] DATABASE_NAME is empty!")
+		panic("DATABASE_NAME environment variable must be set")
 	}
 
 	serverPort := os.Getenv("SERVER_PORT")
@@ -39,9 +37,12 @@ func LoadConfig() *Config {
 		serverPort = "8080" // Default port
 	}
 
+	log.Printf("[CONFIG] Loaded: DB=%s, Port=%s\n", databaseName, serverPort)
+
 	return &Config{
 		MongoURI:     mongoURI,
 		DatabaseName: databaseName,
 		ServerPort:   serverPort,
 	}
 }
+
