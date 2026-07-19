@@ -1,6 +1,6 @@
 # 📡 API Endpoint Documentation
 
-Dokumentasi ini menjelaskan kontrak integrasi untuk endpoint **Database Querier Agent**. Format API ini selaras 100% dengan standar **Joki Tugas System** — Banana Dev Team.
+Dokumentasi kontrak integrasi untuk endpoint **Database Querier Agent**.
 
 ---
 
@@ -32,6 +32,8 @@ Dokumentasi ini menjelaskan kontrak integrasi untuk endpoint **Database Querier 
   }
 }
 ```
+
+### Deskripsi Field
 
 | Field                  | Tipe    | Keterangan                                                                                       |
 | ---------------------- | ------- | ------------------------------------------------------------------------------------------------ |
@@ -72,6 +74,8 @@ Dokumentasi ini menjelaskan kontrak integrasi untuk endpoint **Database Querier 
 }
 ```
 
+### Deskripsi Field
+
 | Field             | Tipe   | Keterangan                                         |
 | ----------------- | ------ | -------------------------------------------------- |
 | `status`        | string | `"success"` atau `"error"`                     |
@@ -82,7 +86,17 @@ Dokumentasi ini menjelaskan kontrak integrasi untuk endpoint **Database Querier 
 
 ---
 
-## 4. Contoh Payload untuk Testing (Postman)
+## 4. Keamanan & Aturan
+
+| Fitur                         | Detail                                                                                                                                                             |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Read-Only**           | Agent hanya mengizinkan operasi baca (`find`, `aggregate`, `countDocuments`). Operasi tulis (`insert`, `update`, `delete`, `drop`) ditolak otomatis. |
+| **CORS**                | Whitelist origin:`https://jokitugas.bananaunion.web.id`                                                                                                          |
+| **Pipeline Validation** | Stage berbahaya seperti`$out` dan `$merge` diblokir secara otomatis.                                                                                           |
+
+---
+
+## 5. Contoh Payload untuk Testing (Postman / cURL)
 
 ### A. Skenario Find
 
@@ -136,4 +150,24 @@ Dokumentasi ini menjelaskan kontrak integrasi untuk endpoint **Database Querier 
     "timestamp": 1689694097
   }
 }
+```
+
+### D. Contoh cURL
+
+```bash
+curl -X POST https://database-querier.vercel.app/query \
+  -H "Content-Type: application/json" \
+  -d '{
+    "task_id": "test-curl-001",
+    "agent_type": "database_querier",
+    "payload": {
+      "url": "",
+      "keyword": "",
+      "raw_text": "Tampilkan seluruh mahasiswa semester 6"
+    },
+    "metadata": {
+      "sender": "orchestrator",
+      "timestamp": 1689694097
+    }
+  }'
 ```

@@ -5,14 +5,26 @@
 > **Tipe Output:** Teks (Hasil query database)
 > **Framework:** Go (GoFiber)
 > **Database:** MongoDB Atlas
-
-Agent ini bertugas membaca perintah natural (bahasa Indonesia) dari pengguna, menerjemahkannya menjadi query MongoDB (read-only), mengeksekusi query, lalu memformat hasilnya menjadi teks yang mudah dibaca oleh Orchestrator/LLM.
+> **Deployment:** Vercel Serverless Functions
 
 ---
 
-## 📡 API Contract & Endpoint
+## 📌 Tentang
 
-Dokumentasi ini menjelaskan kontrak integrasi untuk endpoint **Database Querier Agent**. Format API ini selaras 100% dengan standar **Joki Tugas System** — Banana Dev Team.
+**Database Querier Agent** adalah komponen agent dalam ekosistem **Joki Tugas System** (Banana Dev Team) yang bertugas:
+
+1. Menerima perintah natural (bahasa Indonesia) dari Orchestrator.
+2. Menerjemahkan perintah tersebut menjadi query MongoDB (read-only).
+3. Mengeksekusi query terhadap database MongoDB Atlas.
+4. Memformat hasil query menjadi teks yang mudah dibaca oleh Orchestrator/LLM.
+
+Agent ini bersifat **read-only** — hanya operasi baca (`find`, `aggregate`, `countDocuments`) yang diizinkan. Semua operasi tulis ditolak secara otomatis.
+
+---
+
+## 📡 API Contract
+
+> 📄 Dokumentasi API lengkap tersedia di **[API_ENDPOINT.md](./API_ENDPOINT.md)**
 
 | Item                   | Detail                                        |
 | ---------------------- | --------------------------------------------- |
@@ -21,143 +33,39 @@ Dokumentasi ini menjelaskan kontrak integrasi untuk endpoint **Database Querier 
 | **Content-Type** | `application/json`                          |
 | **Health Check** | `GET /health`                               |
 
----
-
-## 📥 Format Request (Input)
+### Request
 
 ```json
 {
-  "task_id": "req-12345-abc",
+  "task_id": "string",
   "agent_type": "database_querier",
   "payload": {
     "url": "",
     "keyword": "",
-    "raw_text": "Tampilkan seluruh mahasiswa semester 6"
+    "raw_text": "perintah bahasa Indonesia"
   },
   "metadata": {
     "sender": "orchestrator",
-    "timestamp": 1689694097
+    "timestamp": 0
   }
 }
 ```
 
-| Field                  | Tipe    | Keterangan                                                                                       |
-| ---------------------- | ------- | ------------------------------------------------------------------------------------------------ |
-| `task_id`            | string  | ID unik task dari Orchestrator                                                                   |
-| `agent_type`         | string  | Harus`"database_querier"`                                                                      |
-| `payload.raw_text`   | string  | **Input utama** — perintah bahasa Indonesia yang akan diterjemahkan menjadi query MongoDB |
-| `payload.url`        | string  | Tidak digunakan (kirim`""`)                                                                    |
-| `payload.keyword`    | string  | Tidak digunakan (kirim`""`)                                                                    |
-| `metadata.sender`    | string  | Pengirim request (misal`"orchestrator"`)                                                       |
-| `metadata.timestamp` | integer | Unix timestamp saat request dikirim                                                              |
-
----
-
-## 📤 Format Response (Output)
-
-### ✅ Sukses (HTTP 200)
+### Response
 
 ```json
 {
-  "status": "success",
-  "task_id": "req-12345-abc",
+  "status": "success | error",
+  "task_id": "string",
   "data": {
-    "result": "Ditemukan 6 data:\n- {\"name\":\"Ahmad\",\"semester\":6,\"gpa\":3.8,\"major\":\"Informatika\"}\n- {\"name\":\"Budi\",\"semester\":6,\"gpa\":3.2,\"major\":\"Sistem Informasi\"}\n- ...",
+    "result": "string | null",
     "file_url": null
   },
-  "message": "Pemrosesan berhasil"
-}
-```
-
-### ❌ Error (HTTP 400 / 500)
-
-```json
-{
-  "status": "error",
-  "task_id": "req-12345-abc",
-  "data": null,
-  "message": "Gagal memproses permintaan: Collection not found"
-}
-```
-
-| Field             | Tipe   | Keterangan                                         |
-| ----------------- | ------ | -------------------------------------------------- |
-| `status`        | string | `"success"` atau `"error"`                     |
-| `task_id`       | string | ID task yang sama dari request                     |
-| `data.result`   | string | Hasil query dalam bentuk teks (hanya saat sukses)  |
-| `data.file_url` | null   | Selalu`null` (agent ini hanya menghasilkan teks) |
-| `message`       | string | Pesan deskriptif mengenai status pemrosesan        |
-
----
-
-## 🧪 Contoh Payload untuk Testing (Postman)
-
-### 1. Skenario Find
-
-```json
-{
-  "task_id": "test-find-001",
-  "agent_type": "database_querier",
-  "payload": {
-    "url": "",
-    "keyword": "",
-    "raw_text": "Tampilkan seluruh mahasiswa semester 6"
-  },
-  "metadata": {
-    "sender": "orchestrator",
-    "timestamp": 1689694097
-  }
-}
-```
-
-### 2. Skenario Count
-
-```json
-{
-  "task_id": "test-count-001",
-  "agent_type": "database_querier",
-  "payload": {
-    "url": "",
-    "keyword": "",
-    "raw_text": "Hitung jumlah mahasiswa dengan gpa lebih dari 3.5"
-  },
-  "metadata": {
-    "sender": "orchestrator",
-    "timestamp": 1689694097
-  }
-}
-```
-
-### 3. Skenario Agregasi (Average)
-
-```json
-{
-  "task_id": "test-agg-001",
-  "agent_type": "database_querier",
-  "payload": {
-    "url": "",
-    "keyword": "",
-    "raw_text": "Berapa rata-rata gpa mahasiswa?"
-  },
-  "metadata": {
-    "sender": "orchestrator",
-    "timestamp": 1689694097
-  }
+  "message": "string"
 }
 ```
 
 ---
-
-## 🔒 Keamanan & Aturan
-
-| Fitur                         | Detail                                                                                                                                                             |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Read-Only**           | Agent hanya mengizinkan operasi baca (`find`, `aggregate`, `countDocuments`). Operasi tulis (`insert`, `update`, `delete`, `drop`) ditolak otomatis. |
-| **CORS**                | Whitelist origin:`https://jokitugas.bananaunion.web.id`                                                                                                          |
-| **Pipeline Validation** | Stage berbahaya seperti`$out` dan `$merge` diblokir secara otomatis.                                                                                           |
-
----
-
 
 ## 🚀 Setup Lokal (Development)
 
@@ -212,7 +120,10 @@ database-querier/
 
 ---
 
-## 👤 Developer
+## 🔒 Keamanan
 
-**Raihan Aditya Hermawan** — Database Querier Agent
-Banana Dev Team — Joki Tugas System
+| Fitur                         | Detail                                                                        |
+| ----------------------------- | ----------------------------------------------------------------------------- |
+| **Read-Only**           | Operasi tulis (`insert`, `update`, `delete`, `drop`) ditolak otomatis |
+| **CORS**                | Whitelist origin:`https://jokitugas.bananaunion.web.id`                     |
+| **Pipeline Validation** | Stage berbahaya seperti`$out` dan `$merge` diblokir secara otomatis       |
