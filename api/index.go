@@ -31,7 +31,7 @@ func init() {
 	mongoClient, err := mongodb.NewClient(ctx, cfg.MongoURI, cfg.DatabaseName)
 	if err != nil {
 		logger.Error("VERCEL", "Failed to connect to MongoDB", "error", err.Error())
-		// We shouldn't os.Exit(1) in a serverless environment, just log it.
+		panic("Gagal terhubung ke MongoDB saat inisialisasi: " + err.Error())
 	}
 
 	// Initialize components
