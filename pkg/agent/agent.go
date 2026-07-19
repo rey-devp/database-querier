@@ -9,10 +9,10 @@ import (
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 
-	"database-querier-agent/internal/logger"
-	"database-querier-agent/internal/memory"
-	"database-querier-agent/internal/mongodb"
-	"database-querier-agent/internal/parser"
+	"database-querier-agent/pkg/logger"
+	"database-querier-agent/pkg/memory"
+	"database-querier-agent/pkg/mongodb"
+	"database-querier-agent/pkg/parser"
 )
 
 type Agent struct {

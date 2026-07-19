@@ -5,9 +5,9 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
-	"database-querier-agent/internal/agent"
-	"database-querier-agent/internal/logger"
-	"database-querier-agent/internal/memory"
+	"database-querier-agent/pkg/agent"
+	"database-querier-agent/pkg/logger"
+	"database-querier-agent/pkg/memory"
 )
 
 type Handler struct {

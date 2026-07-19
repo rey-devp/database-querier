@@ -9,12 +9,12 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 
-	"database-querier-agent/internal/agent"
-	"database-querier-agent/internal/config"
-	"database-querier-agent/internal/logger"
-	"database-querier-agent/internal/memory"
-	"database-querier-agent/internal/mongodb"
-	"database-querier-agent/internal/service"
+	"database-querier-agent/pkg/agent"
+	"database-querier-agent/pkg/config"
+	"database-querier-agent/pkg/logger"
+	"database-querier-agent/pkg/memory"
+	"database-querier-agent/pkg/mongodb"
+	"database-querier-agent/pkg/service"
 )
 
 var fiberHandler http.HandlerFunc

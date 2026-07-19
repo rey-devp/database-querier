@@ -5,8 +5,8 @@ import (
 	"log"
 	"time"
 
-	"database-querier-agent/internal/config"
-	"database-querier-agent/internal/mongodb"
+	"database-querier-agent/pkg/config"
+	"database-querier-agent/pkg/mongodb"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
