@@ -1,18 +1,10 @@
-# 🗄️ Database Querier Agent
+# 📡 API Endpoint Documentation
 
-> **Agent Type:** `database_querier`
-> **Tipe Input:** Teks (Natural Language - Bahasa Indonesia)
-> **Tipe Output:** Teks (Hasil query database)
-> **Framework:** Go (GoFiber)
-> **Database:** MongoDB Atlas
-
-Agent ini bertugas membaca perintah natural (bahasa Indonesia) dari pengguna, menerjemahkannya menjadi query MongoDB (read-only), mengeksekusi query, lalu memformat hasilnya menjadi teks yang mudah dibaca oleh Orchestrator/LLM.
+Dokumentasi ini menjelaskan kontrak integrasi untuk endpoint **Database Querier Agent**. Format API ini selaras 100% dengan standar **Joki Tugas System** — Banana Dev Team.
 
 ---
 
-## 📡 API Contract & Endpoint
-
-Dokumentasi ini menjelaskan kontrak integrasi untuk endpoint **Database Querier Agent**. Format API ini selaras 100% dengan standar **Joki Tugas System** — Banana Dev Team.
+## 1. Endpoint Produksi
 
 | Item                   | Detail                                        |
 | ---------------------- | --------------------------------------------- |
@@ -23,7 +15,7 @@ Dokumentasi ini menjelaskan kontrak integrasi untuk endpoint **Database Querier 
 
 ---
 
-## 📥 Format Request (Input)
+## 2. Format Request (Input)
 
 ```json
 {
@@ -53,7 +45,7 @@ Dokumentasi ini menjelaskan kontrak integrasi untuk endpoint **Database Querier 
 
 ---
 
-## 📤 Format Response (Output)
+## 3. Format Response (Output)
 
 ### ✅ Sukses (HTTP 200)
 
@@ -90,9 +82,9 @@ Dokumentasi ini menjelaskan kontrak integrasi untuk endpoint **Database Querier 
 
 ---
 
-## 🧪 Contoh Payload untuk Testing (Postman)
+## 4. Contoh Payload untuk Testing (Postman)
 
-### 1. Skenario Find
+### A. Skenario Find
 
 ```json
 {
@@ -110,7 +102,7 @@ Dokumentasi ini menjelaskan kontrak integrasi untuk endpoint **Database Querier 
 }
 ```
 
-### 2. Skenario Count
+### B. Skenario Count
 
 ```json
 {
@@ -128,7 +120,7 @@ Dokumentasi ini menjelaskan kontrak integrasi untuk endpoint **Database Querier 
 }
 ```
 
-### 3. Skenario Agregasi (Average)
+### C. Skenario Agregasi (Average)
 
 ```json
 {
@@ -145,74 +137,3 @@ Dokumentasi ini menjelaskan kontrak integrasi untuk endpoint **Database Querier 
   }
 }
 ```
-
----
-
-## 🔒 Keamanan & Aturan
-
-| Fitur                         | Detail                                                                                                                                                             |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Read-Only**           | Agent hanya mengizinkan operasi baca (`find`, `aggregate`, `countDocuments`). Operasi tulis (`insert`, `update`, `delete`, `drop`) ditolak otomatis. |
-| **CORS**                | Whitelist origin:`https://jokitugas.bananaunion.web.id`                                                                                                          |
-| **Pipeline Validation** | Stage berbahaya seperti`$out` dan `$merge` diblokir secara otomatis.                                                                                           |
-
----
-
-
-## 🚀 Setup Lokal (Development)
-
-```bash
-# 1. Clone repository
-git clone <repo-url>
-cd database-querier
-
-# 2. Buat file .env
-cp .env.example .env
-# Edit .env dengan kredensial MongoDB Anda
-
-# 3. Install dependencies & jalankan
-go mod tidy
-go run cmd/main.go
-
-# Server berjalan di http://localhost:8080
-```
-
-### Seed Database (Opsional)
-
-Untuk mengisi database dengan 20 data mahasiswa contoh:
-
-```bash
-go run seed/seed.go
-```
-
----
-
-## 📁 Struktur Proyek
-
-```
-database-querier/
-├── api/
-│   └── index.go              # Entrypoint Vercel Serverless
-├── cmd/
-│   └── main.go               # Entrypoint lokal
-├── pkg/
-│   ├── agent/                 # Logika utama agent
-│   ├── config/                # Konfigurasi & env loader
-│   ├── logger/                # Structured logging (slog)
-│   ├── memory/                # In-memory store & models
-│   ├── mongodb/               # MongoDB client & executor
-│   ├── parser/                # Natural language → MongoDB query
-│   └── service/               # HTTP handler (GoFiber)
-├── seed/                      # Script seeder data
-├── .env
-├── vercel.json
-├── go.mod
-└── go.sum
-```
-
----
-
-## 👤 Developer
-
-**Raihan Aditya Hermawan** — Database Querier Agent
-Banana Dev Team — Joki Tugas System
