@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"context"
 	"testing"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -21,7 +22,7 @@ func TestParseOperation(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		plan, _ := parser.Parse(tc.request, collections)
+		plan, _ := parser.Parse(context.Background(), tc.request, collections, nil)
 		if plan.Operation != tc.expected {
 			t.Errorf("Expected %s, got %s for request: %s", tc.expected, plan.Operation, tc.request)
 		}
@@ -33,7 +34,7 @@ func TestParseFilter(t *testing.T) {
 	collections := []string{"students"}
 
 	request := "Tampilkan mahasiswa semester 6 dengan gpa lebih dari 3.5"
-	plan, _ := parser.Parse(request, collections)
+	plan, _ := parser.Parse(context.Background(), request, collections, nil)
 
 	if plan.Filter["semester"] != 6 {
 		t.Errorf("Expected semester to be 6, got %v", plan.Filter["semester"])

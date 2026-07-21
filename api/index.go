@@ -15,8 +15,10 @@ import (
 
 	"database-querier-agent/pkg/agent"
 	"database-querier-agent/pkg/config"
+	"database-querier-agent/pkg/llm"
 	"database-querier-agent/pkg/memory"
 	"database-querier-agent/pkg/mongodb"
+	"database-querier-agent/pkg/parser"
 	"database-querier-agent/pkg/service"
 )
 
@@ -47,8 +49,14 @@ func setupApp() {
 	log.Println("[VERCEL] MongoDB connected successfully!")
 
 	// 3. Initialize components
+	llmClient, err := llm.NewClient(cfg.LLMProvider, cfg.LLMAPIKey, cfg.LLMModel)
+	if err != nil {
+		log.Printf("[VERCEL] WARNING: Failed to create LLM client (will only use fallback parser): %v\n", err)
+	}
+	llmParser := parser.NewLLMParser(llmClient)
+	
 	store := memory.NewStore()
-	dbAgent := agent.NewAgent(mongoClient, store)
+	dbAgent := agent.NewAgent(llmParser, mongoClient, store)
 	handler := service.NewHandler(dbAgent, store)
 
 	// 4. Setup Fiber app

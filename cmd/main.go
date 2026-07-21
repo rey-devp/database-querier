@@ -13,9 +13,11 @@ import (
 
 	"database-querier-agent/pkg/agent"
 	"database-querier-agent/pkg/config"
+	"database-querier-agent/pkg/llm"
 	"database-querier-agent/pkg/logger"
 	"database-querier-agent/pkg/memory"
 	"database-querier-agent/pkg/mongodb"
+	"database-querier-agent/pkg/parser"
 	"database-querier-agent/pkg/service"
 )
 
@@ -43,8 +45,14 @@ func main() {
 	logger.Info("STARTUP", "Connected to MongoDB Atlas", "database", cfg.DatabaseName)
 
 	// 3. Initialize components
+	llmClient, err := llm.NewClient(cfg.LLMProvider, cfg.LLMAPIKey, cfg.LLMModel)
+	if err != nil {
+		logger.Warn("STARTUP", "Failed to create LLM client (will only use fallback parser)", "error", err.Error())
+	}
+	llmParser := parser.NewLLMParser(llmClient)
+	
 	store := memory.NewStore()
-	dbAgent := agent.NewAgent(mongoClient, store)
+	dbAgent := agent.NewAgent(llmParser, mongoClient, store)
 	handler := service.NewHandler(dbAgent, store)
 
 	// 4. Setup Fiber app

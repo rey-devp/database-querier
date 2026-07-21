@@ -11,6 +11,9 @@ type Config struct {
 	MongoURI     string
 	DatabaseName string
 	ServerPort   string
+	LLMProvider  string
+	LLMAPIKey    string
+	LLMModel     string
 }
 
 func LoadConfig() *Config {
@@ -37,12 +40,28 @@ func LoadConfig() *Config {
 		serverPort = "8080" // Default port
 	}
 
-	log.Printf("[CONFIG] Loaded: DB=%s, Port=%s\n", databaseName, serverPort)
+	llmProvider := os.Getenv("LLM_PROVIDER")
+	if llmProvider == "" {
+		llmProvider = "gemini" // Default to gemini
+	}
+
+	llmAPIKey := os.Getenv("LLM_API_KEY")
+	// Intentionally not panicking if empty, to allow fallback to RuleBasedParser
+
+	llmModel := os.Getenv("LLM_MODEL")
+	if llmModel == "" {
+		llmModel = "gemini-2.5-flash"
+	}
+
+	log.Printf("[CONFIG] Loaded: DB=%s, Port=%s, LLM=%s\n", databaseName, serverPort, llmProvider)
 
 	return &Config{
 		MongoURI:     mongoURI,
 		DatabaseName: databaseName,
 		ServerPort:   serverPort,
+		LLMProvider:  llmProvider,
+		LLMAPIKey:    llmAPIKey,
+		LLMModel:     llmModel,
 	}
 }
 

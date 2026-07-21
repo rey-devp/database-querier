@@ -1,10 +1,13 @@
 package parser
 
 import (
+	"context"
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
 
+	"database-querier-agent/pkg/llm"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
@@ -19,7 +22,7 @@ type QueryPlan struct {
 }
 
 type Parser interface {
-	Parse(userRequest string, availableCollections []string) (*QueryPlan, error)
+	Parse(ctx context.Context, userRequest string, availableCollections []string, sampleDocs map[string][]bson.M) (*QueryPlan, error)
 }
 
 type RuleBasedParser struct{}
@@ -28,7 +31,7 @@ func NewRuleBasedParser() *RuleBasedParser {
 	return &RuleBasedParser{}
 }
 
-func (p *RuleBasedParser) Parse(userRequest string, availableCollections []string) (*QueryPlan, error) {
+func (p *RuleBasedParser) Parse(ctx context.Context, userRequest string, availableCollections []string, sampleDocs map[string][]bson.M) (*QueryPlan, error) {
 	req := strings.ToLower(strings.TrimSpace(userRequest))
 	plan := &QueryPlan{
 		Filter:     bson.M{},
@@ -142,4 +145,56 @@ func buildAggregatePipeline(req string, filter bson.M) []bson.M {
 	pipeline = append(pipeline, bson.M{"$group": groupStage})
 	
 	return pipeline
+}
+
+// --- LLM PARSER ---
+
+type LLMParser struct {
+	client llm.LLMClient
+}
+
+func NewLLMParser(client llm.LLMClient) *LLMParser {
+	return &LLMParser{client: client}
+}
+
+func (p *LLMParser) Parse(ctx context.Context, userRequest string, availableCollections []string, sampleDocs map[string][]bson.M) (*QueryPlan, error) {
+	prompt := llm.BuildPrompt(userRequest, availableCollections, sampleDocs)
+	
+	resp, err := p.client.GenerateQuery(ctx, prompt)
+	if err != nil {
+		return nil, fmt.Errorf("LLM generation failed: %w", err)
+	}
+
+	plan := &QueryPlan{
+		Collection: resp.Collection,
+		Operation:  resp.Operation,
+	}
+
+	if resp.Filter != nil {
+		plan.Filter = resp.Filter
+	} else {
+		plan.Filter = bson.M{}
+	}
+
+	if resp.Projection != nil {
+		plan.Projection = resp.Projection
+	} else {
+		plan.Projection = bson.M{}
+	}
+
+	if resp.Sort != nil {
+		plan.Sort = resp.Sort
+	}
+
+	if resp.Pipeline != nil {
+		var pipeline []bson.M
+		for _, stage := range resp.Pipeline {
+			pipeline = append(pipeline, stage)
+		}
+		plan.Pipeline = pipeline
+	}
+
+	plan.Limit = resp.Limit
+
+	return plan, nil
 }

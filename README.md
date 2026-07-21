@@ -5,6 +5,7 @@
 > **Tipe Output:** Teks (Hasil query database)
 > **Framework:** Go (GoFiber)
 > **Database:** MongoDB Atlas
+> **AI Engine:** Google Gemini (LLM)
 > **Deployment:** Vercel Serverless Functions
 
 ---
@@ -14,8 +15,8 @@
 **Database Querier Agent** adalah komponen agent dalam ekosistem **Joki Tugas System** (Banana Dev Team) yang bertugas:
 
 1. Menerima perintah natural (bahasa Indonesia) dari Orchestrator.
-2. Menerjemahkan perintah tersebut menjadi query MongoDB (read-only).
-3. Mengeksekusi query terhadap database MongoDB Atlas.
+2. Menggunakan **Google Gemini LLM** (atau fallback Rule-Based) untuk menerjemahkan perintah tersebut menjadi query MongoDB dinamis.
+3. Mengeksekusi query terhadap database MongoDB Atlas (read-only).
 4. Memformat hasil query menjadi teks yang mudah dibaca oleh Orchestrator/LLM.
 
 Agent ini bersifat **read-only** — hanya operasi baca (`find`, `aggregate`, `countDocuments`) yang diizinkan. Semua operasi tulis ditolak secara otomatis.
@@ -76,7 +77,10 @@ cd database-querier
 
 # 2. Buat file .env
 cp .env.example .env
-# Edit .env dengan kredensial MongoDB Anda
+# Edit .env dengan kredensial MongoDB dan Gemini API Key Anda:
+# MONGO_DBQ=...
+# DATABASE_NAME=...
+# LLM_API_KEY=your_gemini_api_key_here
 
 # 3. Install dependencies & jalankan
 go mod tidy
@@ -106,10 +110,11 @@ database-querier/
 ├── pkg/
 │   ├── agent/                 # Logika utama agent
 │   ├── config/                # Konfigurasi & env loader
+│   ├── llm/                   # LLM Client (Gemini) & Prompt Builder
 │   ├── logger/                # Structured logging (slog)
 │   ├── memory/                # In-memory store & models
 │   ├── mongodb/               # MongoDB client & executor
-│   ├── parser/                # Natural language → MongoDB query
+│   ├── parser/                # RuleBased & LLM parser
 │   └── service/               # HTTP handler (GoFiber)
 ├── seed/                      # Script seeder data
 ├── .env

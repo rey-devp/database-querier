@@ -16,16 +16,18 @@ import (
 )
 
 type Agent struct {
-	parser *parser.RuleBasedParser
-	mongo  *mongodb.Client
-	store  *memory.Store
+	parser   parser.Parser
+	fallback parser.Parser
+	mongo    *mongodb.Client
+	store    *memory.Store
 }
 
-func NewAgent(mongo *mongodb.Client, store *memory.Store) *Agent {
+func NewAgent(p parser.Parser, mongo *mongodb.Client, store *memory.Store) *Agent {
 	return &Agent{
-		parser: parser.NewRuleBasedParser(),
-		mongo:  mongo,
-		store:  store,
+		parser:   p,
+		fallback: parser.NewRuleBasedParser(),
+		mongo:    mongo,
+		store:    store,
 	}
 }
 
@@ -47,10 +49,23 @@ func (a *Agent) ProcessTask(ctx context.Context, taskID string) (*memory.Success
 	}
 	logger.Info("AGENT", "Collections discovered", "count", len(collections))
 
+	// 2b. Get sample docs for context
+	sampleDocs := make(map[string][]bson.M)
+	for _, coll := range collections {
+		docs, err := a.mongo.GetSampleDocuments(ctx, coll, 2)
+		if err == nil {
+			sampleDocs[coll] = docs
+		}
+	}
+
 	// 3. Parse user request
-	plan, err := a.parser.Parse(task.UserRequest, collections)
+	plan, err := a.parser.Parse(ctx, task.UserRequest, collections, sampleDocs)
 	if err != nil {
-		return nil, a.handleError(taskID, "Failed to parse request: "+err.Error())
+		logger.Warn("PARSER", "Main parser failed, falling back to RuleBasedParser", "error", err.Error())
+		plan, err = a.fallback.Parse(ctx, task.UserRequest, collections, sampleDocs)
+		if err != nil {
+			return nil, a.handleError(taskID, "Failed to parse request (all parsers failed): "+err.Error())
+		}
 	}
 	logger.Info("PARSER", "Query plan generated", "collection", plan.Collection, "operation", plan.Operation)
 
