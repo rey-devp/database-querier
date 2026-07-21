@@ -158,6 +158,10 @@ func NewLLMParser(client llm.LLMClient) *LLMParser {
 }
 
 func (p *LLMParser) Parse(ctx context.Context, userRequest string, availableCollections []string, sampleDocs map[string][]bson.M) (*QueryPlan, error) {
+	if p.client == nil {
+		return nil, fmt.Errorf("LLM client is not initialized (missing API key?)")
+	}
+
 	prompt := llm.BuildPrompt(userRequest, availableCollections, sampleDocs)
 	
 	resp, err := p.client.GenerateQuery(ctx, prompt)
